@@ -4,7 +4,7 @@
 """
 
 import os
-from webargs import fields
+from webargs import fields, validate
 from marshmallow import Schema, INCLUDE
 
 # identify basedir for the package
@@ -24,6 +24,7 @@ if 'APP_INPUT_OUTPUT_BASE_DIR' in os.environ:
         print(msg)
 
 DATA_DIR = os.path.join(IN_OUT_BASE_DIR, 'data')
+IMG_STYLE_DIR = os.path.join(IN_OUT_BASE_DIR, 'neural_transfer/dataset/style_images')
 MODELS_DIR = os.path.join(IN_OUT_BASE_DIR, 'models')
 
 # Input parameters for predict() (deepaas>=1.0.0)
@@ -33,29 +34,62 @@ class PredictArgsSchema(Schema):
 
     # full list of fields: https://marshmallow.readthedocs.io/en/stable/api_reference.html
     # to be able to upload a file for prediction
-    files = fields.Field(
+    
+    img_content = fields.Field(
         required=False,
         missing=None,
         type="file",
-        data_key="data",
+        data_key="image_content",
         location="form",
-        description="Select a file for the prediction"
-    )
-
-    # to be able to provide an URL for prediction
-    urls = fields.Url(
-        required=False,
-        missing=None,
-        description="Provide an URL of the data for the prediction"
+        description="Image to be styled."
     )
     
-    # an input parameter for prediction
-    arg1 = fields.Integer(
+    img_style = fields.Field(
         required=False,
-        missing=1,
-        description="Input argument 1 for the prediction"
+        missing=None,
+        type="file",
+        data_key="image_style",
+        location="form",
+        description="Image with the style."
     )
-
+    
+    #urls =  fields.Url(
+    #        description="Url of the image to perform the styling on.",
+    #        required=False,
+    #        missing=None)
+    
+    style = fields.Str(
+            required=False,  # force the user to define the value
+            missing="hi",  # default value to use
+            enum=["The Starry Night (Van Gogh)", "hi", "c"],  # list of choices
+            description="Selection of the image which style we want to transfer."  # help string
+        )
+    
+    
+    num_steps = fields.Int(
+        required=False,
+        missing = 300,
+        description="Number of steps."
+    )
+      
+    style_weight =  fields.Int(
+        required=False,
+        missing = 1000000,
+        description="Weigth of the image of the style."
+    )
+     
+    content_weight =  fields.Int(
+        required=False,
+        missing = 1,
+        description="Weigth of the image of the content."
+    )
+        
+    output = fields.Str(
+            require=False,
+            description="Returns the image with the new style or a pdf containing the 3 images.",
+            missing='image/png',
+            validate=validate.OneOf(['image/png', 'application/pdf']))
+    
 # Input parameters for train() (deepaas>=1.0.0)
 class TrainArgsSchema(Schema):
     class Meta:
@@ -63,8 +97,8 @@ class TrainArgsSchema(Schema):
 
     # available fields are e.g. fields.Integer(), fields.Str(), fields.Boolean()
     # full list of fields: https://marshmallow.readthedocs.io/en/stable/api_reference.html
-    arg1 = fields.Integer(
-        required=False,
-        missing=1,
-        description="Input argument 1 for training"
-    )
+    #name = fields.Str(
+    #    required=True,
+    #    location="form",
+    #    description="Description"
+    #)

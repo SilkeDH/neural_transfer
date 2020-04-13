@@ -6,22 +6,30 @@ Integrate a model with the DEEP API
 import json
 import argparse
 import pkg_resources
-# import project's config.py
+import os
+import pickle
+
 import neural_transfer.config as cfg
+import neural_transfer.models.image_utils as iutils
+import neural_transfer.models.file_utils as futils
+import neural_transfer.models.style_transfer as transfer_style
+
+import torch
+import torchvision.models as models
+
+from PIL import Image
 from aiohttp.web import HTTPBadRequest
 
-## Authorization
 from flaat import Flaat
+#from __future__ import print_function
 flaat = Flaat()
 
-
-def _catch_error(f):
-    def wrap(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except Exception as e:
-            raise HTTPBadRequest(reason=e)
-    return wrap
+#def _catch_error(f):
+#    def wrap(*args, **kwargs):
+#        try:
+#            return f(*args, **kwargs)
+#        except Exception as e:
+#            raise HTTPBadRequest(reason=e)
 
 
 def _fields_to_dict(fields_in):
@@ -123,7 +131,7 @@ def get_predict_args():
     return cfg.PredictArgsSchema().fields
 
 
-@_catch_error
+#@_catch_error
 def predict(**kwargs):
     """
     Function to execute prediction
@@ -132,28 +140,78 @@ def predict(**kwargs):
     :return:
     """
 
-    if (not any([kwargs['urls'], kwargs['files']]) or
-            all([kwargs['urls'], kwargs['files']])):
-        raise Exception("You must provide either 'url' or 'data' in the payload")
+    #if (not any([kwargs['img_style'], kwargs['style']]) or
+    #        all([kwargs['img_style'], kwargs['style']])):
+    #    return "ERROR : You must provide either custom 'img_style' or choose any of the styles in the 'style' list."
 
-    if kwargs['files']:
-        kwargs['files'] = [kwargs['files']]  # patch until list is available
+    if kwargs['img_content']:
         return _predict_data(kwargs)
-    elif kwargs['urls']:
-        kwargs['urls'] = [kwargs['urls']]  # patch until list is available
-        return _predict_url(kwargs)
-
-
-def _predict_data(*args):
+    else:
+         return "ERROR : You must provide an image as the content"
+    
+def _predict_data(args):
     """
     (Optional) Helper function to make prediction on an uploaded file
     """
-    message = 'Not implemented (predict_data())'
-    message = {"Error": message}
+    message = { "status": "ok",
+               "prediction": [],
+              }
+
+    # select wether cpu or gpu.
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = "cpu"
+    
+    # image style.
+    img_style_path = args["img_style"].filename
+    
+    # image content.
+    img_content_path = args["img_content"].filename
+    
+    #img_style = os.path.join(cfg.IMG_STYLE_DIR, 'picasso.jpg')
+    img_style = img_style_path
+    
+    # image content.
+    #img_content = os.path.join(cfg.IMG_STYLE_DIR, 'dancing.jpg')
+    img_content = img_content_path
+
+    # image resizing value.
+    imsize = 512 if torch.cuda.is_available() else 128  # use small size if no gpu 
+        
+    # convert the image into a torch tensor.
+    img_style = iutils.image_loader(img_style, imsize, device)
+    img_content = iutils.image_loader(img_content, imsize, device)
+    
+    assert img_style.size() == img_content.size()
+    
+    # defining VGG-19 layers to get features for styling and content.
+    
+    style_layers = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
+    content_layers = ['conv_4']
+    
+    # VGG networks are trained on images with each channel normalized.
+    normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
+    normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(device)
+        
+    # load VGG-19 model.
+    cnn = models.vgg19(pretrained=True).features.to(device).eval()
+    
+    # defining noised image as input image.
+    img_input = torch.randn(img_content.data.size(), device=device)
+
+    # run style transfer
+    output = transfer_style.run_style_transfer(cnn, device, normalization_mean, normalization_std,
+                            img_content, img_style, img_input, style_layers, content_layers)
+        
+    print(output)
+    print("we did it")
+    
+    prediction_results = {"DONE": "succesfully transferred."}
+    message["prediction"].append(prediction_results)
+    
     return message
 
 
-def _predict_url(*args):
+def _predict_url(args):
     """
     (Optional) Helper function to make prediction on an URL
     """
@@ -189,15 +247,15 @@ def train(**kwargs):
                 "training": [],
               }
 
-    # use the schema
-    schema = cfg.TrainArgsSchema()
-    # deserialize key-word arguments
-    train_args = schema.load(kwargs)
+    # use the schema.
+    #schema = cfg.TrainArgsSchema()
+    # deserialize key-word arguments.
+    #train_args = schema.load(kwargs)
     
-    # 1. implement your training here
+    # 1. implement your training here. 
+    
     # 2. update "message"
-    
-    train_results = { "Error": "No model implemented for training (train())" }
+    train_results = { "DONE": "Training is not implemented. Everything is done in 'Prediction'" }
     message["training"].append(train_results)
 
     return message

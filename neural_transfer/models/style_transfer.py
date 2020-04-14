@@ -125,17 +125,17 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
 
 def run_style_transfer(cnn, device, normalization_mean, normalization_std,
                        content_img, style_img, input_img, style_layers,
-                       content_layers, num_steps=300, style_weight=1000000, 
-                       content_weight=1):
+                       content_layers, num_steps, style_weight, 
+                       content_weight):
     """Run the style transfer."""
-    print('Building the style transfer model..')
+    print('[INFO]: Building the style transfer model..')
     model, style_losses, content_losses = get_style_model_and_losses(cnn,
         normalization_mean, normalization_std, style_img, content_img,
         content_layers, style_layers, device)
     
     optimizer = get_input_optimizer(input_img)
     
-    print('Optimizing..')
+    print('[INFO]: Optimizing..')
     run = [0]
     while run[0] <= num_steps:
 

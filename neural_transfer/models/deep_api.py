@@ -16,6 +16,7 @@ import neural_transfer.models.style_transfer as transfer_style
 
 import torch
 import torchvision.models as models
+import torchvision.transforms as transforms
 
 from PIL import Image
 from aiohttp.web import HTTPBadRequest
@@ -174,17 +175,22 @@ def _predict_data(args):
     #img_content = os.path.join(cfg.IMG_STYLE_DIR, 'dancing.jpg')
     img_content = img_content_path
 
+    print("[INFO]: Resizing images...")
     # image resizing value.
     imsize = 512 if torch.cuda.is_available() else 128  # use small size if no gpu 
         
     # convert the image into a torch tensor.
-    img_style = iutils.image_loader(img_style, imsize, device)
-    img_content = iutils.image_loader(img_content, imsize, device)
+    img_style = iutils.image_loader(img_style, imsize, 444,444, device)
+    img_content = iutils.image_loader(img_content, imsize, 444,444, device)
+    
+    print("[DEBUG]: Style image size: {}".format(img_style.size()))
+    print("[DEBUG]: Content image size: {}".format(img_content.size()))
     
     assert img_style.size() == img_content.size()
     
     # defining VGG-19 layers to get features for styling and content.
     
+    print("[INFO]: Defining layers...")
     style_layers = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
     content_layers = ['conv_4']
     
@@ -192,21 +198,40 @@ def _predict_data(args):
     normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
     normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(device)
         
+    print("[INFO]: Downloading VGG-19 network")
     # load VGG-19 model.
     cnn = models.vgg19(pretrained=True).features.to(device).eval()
     
-    # defining noised image as input image.
-    img_input = torch.randn(img_content.data.size(), device=device)
-
-    # run style transfer
-    output = transfer_style.run_style_transfer(cnn, device, normalization_mean, normalization_std,
-                            img_content, img_style, img_input, style_layers, content_layers)
-        
-    print(output)
-    print("we did it")
+    # cloning the content image as the input image.
+    img_input= img_content.clone()
     
-    prediction_results = {"DONE": "succesfully transferred."}
-    message["prediction"].append(prediction_results)
+    #A white noise image can also be used as input but it will require more number of steps.
+    #img_input = torch.randn(img_content.data.size(), device=device)
+
+    print("[INFO]: Transferring style to image..")
+    # run style transfer.
+    output = transfer_style.run_style_transfer(cnn, device, normalization_mean, normalization_std,
+                            img_content, img_style, img_input, style_layers, content_layers, args["num_steps"],
+                                               args["style_weight"], args["content_weight"])
+    
+    print("[INFO]: Saving image...")
+    # saving the image.
+    unloader = transforms.ToPILImage() 
+    
+    # remove the fake batch dimension.
+    image = output.squeeze(0)
+    
+    img_result = unloader(image)
+    img_result.save(os.path.join(cfg.DATA_DIR, 'image_result.png'))
+    
+    if(args['accept'] == 'image/png'):
+        message = open(os.path.join(cfg.DATA_DIR, 'image_result.png'), 'rb')
+    
+    else:
+        prediction_results = {"DONE": "succesfully transferred."}
+        message["prediction"].append(prediction_results)
+        
+    print("[INFO]: Transferring finished.")
     
     return message
 
@@ -253,7 +278,7 @@ def train(**kwargs):
     #train_args = schema.load(kwargs)
     
     # 1. implement your training here. 
-    
+
     # 2. update "message"
     train_results = { "DONE": "Training is not implemented. Everything is done in 'Prediction'" }
     message["training"].append(train_results)

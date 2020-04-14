@@ -84,7 +84,7 @@ class PredictArgsSchema(Schema):
         description="Weigth of the image of the content."
     )
         
-    output = fields.Str(
+    accept = fields.Str(
             require=False,
             description="Returns the image with the new style or a pdf containing the 3 images.",
             missing='image/png',

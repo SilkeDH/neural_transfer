@@ -10,3 +10,6 @@ marshmallow
 
 deepaas>=1.0.0
 flaat>=0.5.1
+
+Pillow
+fpdf==1.7.2

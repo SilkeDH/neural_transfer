@@ -160,7 +160,7 @@ def _predict_data(args):
 
     # select wether cpu or gpu.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = "cpu"
+    print("[INFO]: Running in device: {}".format(device))
     
     # image style.
     img_style_path = args["img_style"].filename
@@ -174,14 +174,17 @@ def _predict_data(args):
     # image content.
     #img_content = os.path.join(cfg.IMG_STYLE_DIR, 'dancing.jpg')
     img_content = img_content_path
+    img_content_size = Image.open(img_content)
+    width, height = img_content_size.size
+    
 
     print("[INFO]: Resizing images...")
     # image resizing value.
     imsize = 512 if torch.cuda.is_available() else 128  # use small size if no gpu 
         
     # convert the image into a torch tensor.
-    img_style = iutils.image_loader(img_style, imsize, 444,444, device)
-    img_content = iutils.image_loader(img_content, imsize, 444,444, device)
+    img_style = iutils.image_loader(img_style, imsize, height, width, device)
+    img_content = iutils.image_loader(img_content, imsize, height, width, device)
     
     print("[DEBUG]: Style image size: {}".format(img_style.size()))
     print("[DEBUG]: Content image size: {}".format(img_content.size()))
@@ -219,7 +222,8 @@ def _predict_data(args):
     unloader = transforms.ToPILImage() 
     
     # remove the fake batch dimension.
-    image = output.squeeze(0)
+    image = output.cpu().clone()
+    image = image.squeeze(0)      # remove the fake batch dimension
     
     img_result = unloader(image)
     img_result.save(os.path.join(cfg.DATA_DIR, 'image_result.png'))

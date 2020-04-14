@@ -10,7 +10,7 @@ DEEP Open Catalogue: Neural Transfer
 This is an example of how to perform neural transfer. This module allows you to take the content of an image and reproduce it with a new artistic style using the style of a different image. The code is based on the [Neural transfer Pytorch example](https://pytorch.org/tutorials/advanced/neural_style_tutorial.html) that implements the [Neural-Style algorithm](https://arxiv.org/abs/1508.06576) developed by Leon A. Gatys, Alexander S. Ecker and Matthias Bethge. This module returns either the new styled image or a pdf containing the two input images and the result image.
 
 <p align="center">
-<img src="./reports/figures/image_result-2.png" width="400">
+<img src="./reports/figures/element.png" width="400">
 </p>
 
 **Table of contents**
@@ -62,6 +62,11 @@ You can find more information about it in the [DEEP Marketplace](https://marketp
 
 Go to http://0.0.0.0:5000/ui and look for the `PREDICT` POST method. Click on 'Try it out', change whatever test args
 you want and click 'Execute'. There you must supply two different images, one containing the style and the other, the content. If you do not have any images where you can get the style, you can choose one in the `style` argument that we provide.
+
+
+<p align="center">
+<img src="./reports/figures/corgi.png" width="400">
+</p>
 
 ## Acknowledgements
 

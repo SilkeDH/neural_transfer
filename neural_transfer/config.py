@@ -78,7 +78,7 @@ class PredictArgsSchema(Schema):
         description="Weigth of the image of the style."
     )
      
-    content_weight =  fields.Int(
+    content_weight =  fields.Float(
         required=False,
         missing = 1,
         description="Weigth of the image of the content."

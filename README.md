@@ -7,17 +7,13 @@ DEEP Open Catalogue: Neural Transfer
 
 **Project:** This work is part of the [DEEP Hybrid-DataCloud](https://deep-hybrid-datacloud.eu/) project that has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 777435.
 
-This is an example of how to perform neural transfer. This module allows you to take the content of an image and reproduce it with a new artistic style using the style of a different image. The code is based on the [Neural transfer Pytorch example](https://pytorch.org/tutorials/advanced/neural_style_tutorial.html) that implements the [Neural-Style algorithm](https://arxiv.org/abs/1508.06576) developed by Leon A. Gatys, Alexander S. Ecker and Matthias Bethge. This module returns either the new styled image or a pdf containing the two input images and the result image.
+This is an example of how to perform neural transfer. This module allows you to take the content of an image and reproduce it with a new artistic style using the style of a different image. The code is based on the [Neural transfer Pytorch example](https://pytorch.org/tutorials/advanced/neural_style_tutorial.html) that implements the [Neural-Style algorithm](https://arxiv.org/abs/1508.06576) developed by Leon A. Gatys, Alexander S. Ecker and Matthias Bethge. This module returns either the new styled image or a pdf containing the two input images and the result image.<br/><br/>
+
 
 <p align="center">
-<img src="./reports/figures/deep_examples.png" width="700">
+<img src="./reports/figures/deep_examples.png" width="820">
 </p>
-
-Another example applied to a real image is given below:
-
-<p align="center">
-<img src="./reports/figures/corgi.png" width="400">
-</p>
+<br/><br/>
 
 **Table of contents**
 1. [Installing this module](#installing-this-module)

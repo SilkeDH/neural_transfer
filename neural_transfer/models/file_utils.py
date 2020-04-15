@@ -1,28 +1,45 @@
 import neural_transfer.config as cfg
-import subprocess
-from os import path
-
-def download_model(name):
-    try:
-        nums = [cfg.MODELS_DIR, name]
-        model_path = '{0}/{1}.pt'.format(*nums)
-        cat_path = '{0}/{1}.pkl'.format(*nums)
+import os
+from PIL import Image
+from fpdf import FPDF
         
-        if not path.exists(model_path) or not path.exists(cat_path):
-            remote_nums = [cfg.REMOTE_MODELS_DIR, name]
-            remote_model_path = '{0}/{1}.pt'.format(*remote_nums)
-            remote_cat_path = '{0}/{1}.pkl'.format(*remote_nums)
-            print('[INFO] Model not found, downloading model...')
-            # from "rshare" remote storage into the container
-            command = (['rclone', 'copy', '--progress', remote_model_path, cfg.MODELS_DIR])
-            result = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output, error = result.communicate()
-            command = (['rclone', 'copy', '--progress', remote_cat_path, cfg.MODELS_DIR])
-            result = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output, error = result.communicate()
-            print('[INFO] Finished.')
-        else:
-            print("[INFO] Model found.")
-            
-    except OSError as e:
-        output, error = None, e
+        
+# Input and result images from the segmentation
+files = ['{}/content_image.png'.format(cfg.DATA_DIR),
+         '{}/style_image.png'.format(cfg.DATA_DIR),
+         '{}/result_image.png'.format(cfg.DATA_DIR)]
+
+# Merge images and add a color legend
+def merge_images():
+    for path in files:
+        img = Image.open(path)
+        img.thumbnail((310, 210), Image.ANTIALIAS)
+        img.save(path)
+
+
+# Put images and accuracy information together in one pdf file
+def create_pdf(style_score, content_score):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Results:', ln=1)
+    pdf.set_font('Arial', '',12)
+    pdf.cell(0, 10, 'Applying style:', ln=1)
+    pdf.image(files[1], 10, 30)
+    
+    pdf.cell(0, 170, 'To image:', ln=1)
+    pdf.image(files[0], 10, 120)
+    
+    pdf.cell(0, 20, 'With:', ln=1) 
+    pdf.cell(0, 5, '\t\t\t\tStyle loss: \t\t {}'.format(style_score), ln=1)
+    pdf.cell(0, 10, '\t\t\t\tContent loss: \t\t {}'.format(content_score), ln=1)
+    pdf.set_font('Arial', 'I', size=9)
+    pdf.cell(1, 30, '--> Result image is in the next page.', ln=2)
+    
+    pdf.add_page()
+    pdf.set_font('Arial', '',12)
+    pdf.cell(0, 10, 'Result image:', ln=1) 
+    pdf.image(files[2], 10, 30)
+    results = '{}/prediction_results.pdf'.format(cfg.DATA_DIR)
+    pdf.output(results,'F')
+    return results

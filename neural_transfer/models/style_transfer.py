@@ -145,6 +145,10 @@ def run_style_transfer(cnn, device, normalization_mean, normalization_std,
 
             optimizer.zero_grad()
             model(input_img)
+            
+            global style_score
+            global content_score 
+            
             style_score = 0
             content_score = 0
 
@@ -174,4 +178,4 @@ def run_style_transfer(cnn, device, normalization_mean, normalization_std,
     # a last correction...
     input_img.data.clamp_(0, 1)
 
-    return input_img
+    return input_img, style_score, content_score

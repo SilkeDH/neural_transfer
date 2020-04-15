@@ -53,11 +53,6 @@ class PredictArgsSchema(Schema):
         description="Image with the style."
     )
     
-    #urls =  fields.Url(
-    #        description="Url of the image to perform the styling on.",
-    #        required=False,
-    #        missing=None)
-    
     style = fields.Str(
             required=False,  # force the user to define the value
             missing="hi",  # default value to use
@@ -65,23 +60,22 @@ class PredictArgsSchema(Schema):
             description="Selection of the image which style we want to transfer."  # help string
         )
     
-    
     num_steps = fields.Int(
         required=False,
         missing = 300,
-        description="Number of steps."
+        description="Number of iterations on the network to compute the gradients."
     )
       
     style_weight =  fields.Int(
         required=False,
         missing = 1000000,
-        description="Weigth of the image of the style."
+        description="Weigth of the image of the style. It represents the emphasis on style in the image. There is a tradeoff between style weight and content weight."
     )
      
     content_weight =  fields.Float(
         required=False,
         missing = 1,
-        description="Weigth of the image of the content."
+        description="Weigth of the image of the content. It represents the emphasis on content in the image. There is a tradeoff between style weight and content weight"
     )
         
     accept = fields.Str(

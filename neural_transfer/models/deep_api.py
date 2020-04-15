@@ -139,24 +139,22 @@ def predict(**kwargs):
     https://docs.deep-hybrid-datacloud.eu/projects/deepaas/en/latest/user/v2-api.html#deepaas.model.v2.base.BaseModel.predict
     :param kwargs:
     :return:
-    """
+    """    
 
-    #if (not any([kwargs['img_style'], kwargs['style']]) or
-    #        all([kwargs['img_style'], kwargs['style']])):
-    #    return "ERROR : You must provide either custom 'img_style' or choose any of the styles in the 'style' list."
+    if 'style' in kwargs.keys() and (kwargs['img_style'] is not None):
+        raise "ERROR : You must provide either custom 'img_style' or choose any of the styles in the 'style' list. If this message persists try again reloading the site."
 
-    if kwargs['img_content']:
-        return _predict_data(kwargs)
+    if (kwargs['img_content'] is not None) and (kwargs['img_style'] is not None):
+        return _predict_data(kwargs, "custom")
+    elif 'style' in kwargs.keys() and (kwargs['img_content'] is not None):
+        return _predict_data(kwargs, "saved")
     else:
-         return "ERROR : You must provide an image as the content"
+        raise "ERROR : Please select a style."
     
-def _predict_data(args):
+def _predict_data(args, state):
     """
     (Optional) Helper function to make prediction on an uploaded file
-    """
-    message = { "status": "ok",
-               "prediction": [],
-              }
+    """       
 
     # defining paths to save the images.
     content_img_path = os.path.join(cfg.DATA_DIR, 'content_image.png')
@@ -167,12 +165,15 @@ def _predict_data(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("[INFO]: Running in device: {}".format(device))
     
-    # image style tmp path.
-    img_style_tmp_path = args["img_style"].filename
-    
     # image content tmp path.
     img_content_tmp_path = args["img_content"].filename
-  
+    
+    if state == "custom":
+        # image style tmp path.
+        img_style_tmp_path = args["img_style"].filename
+    else:
+        img_style_tmp_path = iutils.style_paths[args["style"]]
+        
     # saving style and content images.
     save_style = Image.open(img_style_tmp_path)
     save_content = Image.open(img_content_tmp_path)

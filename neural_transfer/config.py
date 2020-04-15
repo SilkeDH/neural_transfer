@@ -55,9 +55,8 @@ class PredictArgsSchema(Schema):
     
     style = fields.Str(
             required=False,  # force the user to define the value
-            missing="hi",  # default value to use
-            enum=["The Starry Night (Van Gogh)", "hi", "c"],  # list of choices
-            description="Selection of the image which style we want to transfer."  # help string
+            enum=["The Starry Night - Van Gogh" , "Mosaic Lady", "Seated Nude - Picasso", "The Great Wave off Kanagawa - Hokusai"],  # list of choices
+            description="Selection of the image which style we want to transfer. Select one if you don't have any."  # help string
         )
     
     num_steps = fields.Int(
